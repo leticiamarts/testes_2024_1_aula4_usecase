@@ -7,8 +7,6 @@ import exp from "constants";
 
 class FakeRepository implements IContaRepository {
     contas: Conta[] = [];
-    deveFalharAoAtualizarOrigem: boolean = false;
-    deveFalharAoAtualizarDestino: boolean = false;
 
     setContas(contas: Conta[]): void {
         this.contas = contas;
@@ -17,12 +15,6 @@ class FakeRepository implements IContaRepository {
         return this.contas.find(c => c.id === id) || new Error("Conta não encontrada");
     }
     update(id: string, conta: Conta): Conta | Error {
-        if (this.deveFalharAoAtualizarOrigem && id === "origem") {
-            return new Error("Erro ao atualizar conta de origem");
-        }
-        if (this.deveFalharAoAtualizarDestino && id === "destino") {
-            return new Error("Erro ao atualizar conta de destino");
-        }
         const index = this.contas.findIndex(c => c.id === id);
         if (index === -1) {
             return new Error("Conta não encontrada");
@@ -72,43 +64,6 @@ describe('Transferencia Bancária UseCase', () => {
         expect((retorno.valor as Error).message).toEqual("Saldo insuficiente");
     });
 
-    test("Deve atualizar as contas corretamente em caso de sucesso na transferência", () => {
-        const repoFake = new FakeRepository();
-        const conta1: Conta = {
-            id: "123",
-            saldo: 200,
-            ativo: true
-        };
-        const conta2: Conta = {
-            id: "321",
-            saldo: 100,
-            ativo: true
-        };
-        repoFake.setContas([conta1, conta2]);
-        const sut = new TransferenciaBancariaUseCase(repoFake);
-
-        const retorno = sut.processa({
-            origem: conta1.id,
-            destino: conta2.id,
-            valor: 100
-        });
-
-        expect(retorno.valor).toBe(100);
-        const conta1Atualizada = repoFake.findById(conta1.id);
-        if (conta1Atualizada instanceof Conta) {
-            expect(conta1Atualizada.saldo).toBe(100);
-        } else {
-            throw new Error("Conta de origem não encontrada");
-        }
-
-        const conta2Atualizada = repoFake.findById(conta2.id);
-        if (conta2Atualizada instanceof Conta) {
-            expect(conta2Atualizada.saldo).toBe(200);
-        } else {
-            throw new Error("Conta de destino não encontrada");
-        }
-    });
-
     test("Deve retornar um erro caso a conta de origem não seja encontrada", () => {
         const repoFake = new FakeRepository();
         const sut = new TransferenciaBancariaUseCase(repoFake);
@@ -140,30 +95,104 @@ describe('Transferencia Bancária UseCase', () => {
         });
     });
 
-    test("Deve retornar um erro ao atualizar a conta de origem", () => {
+});
+
+describe('Transferencia Bancária UseCase - using jest', () => {
+    test("Deve realizar a transferência com sucesso", () => {
+        // Criação de dados fakes de contas
         const repoFake = new FakeRepository();
-        repoFake.deveFalharAoAtualizarOrigem = true; // Simula falha na atualização da conta de origem
         const conta1: Conta = {
-            id: "origem",
-            saldo: 200,
-            ativo: true
+            id: "123",
+            saldo: 1000,
+            ativo: true,
         };
         const conta2: Conta = {
-            id: "destino",
-            saldo: 100,
-            ativo: true
+            id: "321",
+            saldo: 0,
+            ativo: true,
         };
         repoFake.setContas([conta1, conta2]);
         const sut = new TransferenciaBancariaUseCase(repoFake);
-    
+
+        // Teste de transferência
         const retorno = sut.processa({
             origem: conta1.id,
             destino: conta2.id,
-            valor: 100
+            valor: 100,
         });
-    
+
+        expect(retorno.valor).toEqual(100);
+        expect(conta1.saldo).toEqual(900);
+        expect(conta2.saldo).toEqual(100);
+    });
+
+    test("Deve retornar um erro ao atualizar a conta de origem", () => {
+        // Criação de dados fakes de contas
+        const repoFake = new FakeRepository();
+        const conta1: Conta = {
+            id: "123",
+            saldo: 1000,
+            ativo: true,
+        };
+        const conta2: Conta = {
+            id: "321",
+            saldo: 0,
+            ativo: true,
+        };
+        repoFake.setContas([conta1, conta2]);
+        const sut = new TransferenciaBancariaUseCase(repoFake);
+
+        // Configurando um comportamento específico para a função update
+        jest.spyOn(repoFake, "update").mockImplementation((id: string, conta: Conta) => {
+            if (id === "123") {
+                return new Error("Erro ao atualizar conta de origem");
+            }
+            return conta;
+        });
+
+        // Teste de transferência
+        const retorno = sut.processa({
+            origem: conta1.id,
+            destino: conta2.id,
+            valor: 100,
+        });
+
         expect(retorno.valor).toBeInstanceOf(Error);
         expect((retorno.valor as Error).message).toEqual("Erro ao atualizar conta de origem");
     });
 
+    test("Deve retornar um erro ao atualizar a conta de destino", () => {
+        // Criação de dados fakes de contas
+        const repoFake = new FakeRepository();
+        const conta1: Conta = {
+            id: "123",
+            saldo: 1000,
+            ativo: true,
+        };
+        const conta2: Conta = {
+            id: "321",
+            saldo: 0,
+            ativo: true,
+        };
+        repoFake.setContas([conta1, conta2]);
+        const sut = new TransferenciaBancariaUseCase(repoFake);
+
+        // Configurando um comportamento específico para a função update
+        jest.spyOn(repoFake, "update").mockImplementation((id: string, conta: Conta) => {
+            if (id === "321") {
+                return new Error("Erro ao atualizar conta de destino");
+            }
+            return conta;
+        });
+
+        // Teste de transferência
+        const retorno = sut.processa({
+            origem: conta1.id,
+            destino: conta2.id,
+            valor: 100,
+        });
+
+        expect(retorno.valor).toBeInstanceOf(Error);
+        expect((retorno.valor as Error).message).toEqual("Erro ao atualizar conta de destino");
+    });
 });
