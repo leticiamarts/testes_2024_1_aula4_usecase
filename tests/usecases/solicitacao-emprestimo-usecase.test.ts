@@ -1,8 +1,9 @@
-import { SolicitacaoEmprestimoUseCase, SolicitacaoEmprestimoIn } from "../../src/usecases/solicitacao-emprestimo-usecase";
+import { SolicitacaoEmprestimoUseCase } from "../../src/usecases/solicitacao-emprestimo-usecase";
 import { IEmprestimoRepository } from "../../src/contracts/IEmprestimoRepository";
 import { IContaRepository } from "../../src/contracts/IContaRepository";
 import { Emprestimo } from "../../src/entities/Emprestimo";
 import { Conta } from "../../src/entities/Conta";
+import { SolicitacaoEmprestimoIn } from "contracts/ISolicitacaoEmprestimo";
 
 class FakeEmprestimoRepository implements IEmprestimoRepository {
     emprestimos: Emprestimo[] = [];

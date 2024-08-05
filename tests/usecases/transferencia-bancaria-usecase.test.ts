@@ -116,7 +116,6 @@ describe('Transferencia Bancária UseCase - using jest', () => {
         repoFake.setContas([conta1, conta2]);
         const sut = new TransferenciaBancariaUseCase(repoFake);
 
-        // Teste de transferência
         const retorno = sut.processa({
             origem: conta1.id,
             destino: conta2.id,
@@ -129,30 +128,27 @@ describe('Transferencia Bancária UseCase - using jest', () => {
     });
 
     test("Deve retornar um erro ao atualizar a conta de origem", () => {
-        // Criação de dados fakes de contas
         const repoFake = new FakeRepository();
         const conta1: Conta = {
-            id: "123",
+            id: "abc",
             saldo: 1000,
             ativo: true,
         };
         const conta2: Conta = {
-            id: "321",
+            id: "qwe",
             saldo: 0,
             ativo: true,
         };
         repoFake.setContas([conta1, conta2]);
         const sut = new TransferenciaBancariaUseCase(repoFake);
 
-        // Configurando um comportamento específico para a função update
         jest.spyOn(repoFake, "update").mockImplementation((id: string, conta: Conta) => {
-            if (id === "123") {
+            if (id === "abc") {
                 return new Error("Erro ao atualizar conta de origem");
             }
             return conta;
         });
 
-        // Teste de transferência
         const retorno = sut.processa({
             origem: conta1.id,
             destino: conta2.id,
@@ -164,30 +160,27 @@ describe('Transferencia Bancária UseCase - using jest', () => {
     });
 
     test("Deve retornar um erro ao atualizar a conta de destino", () => {
-        // Criação de dados fakes de contas
         const repoFake = new FakeRepository();
         const conta1: Conta = {
-            id: "123",
-            saldo: 1000,
+            id: "12345",
+            saldo: 100,
             ativo: true,
         };
         const conta2: Conta = {
-            id: "321",
+            id: "67890",
             saldo: 0,
             ativo: true,
         };
         repoFake.setContas([conta1, conta2]);
         const sut = new TransferenciaBancariaUseCase(repoFake);
 
-        // Configurando um comportamento específico para a função update
         jest.spyOn(repoFake, "update").mockImplementation((id: string, conta: Conta) => {
-            if (id === "321") {
+            if (id === "67890") {
                 return new Error("Erro ao atualizar conta de destino");
             }
             return conta;
         });
 
-        // Teste de transferência
         const retorno = sut.processa({
             origem: conta1.id,
             destino: conta2.id,

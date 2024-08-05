@@ -1,17 +1,9 @@
-import { IEmprestimoRepository } from "../contracts/IEmprestimoRepository";
+import { IEmprestimoRepository} from "../contracts/IEmprestimoRepository";
 import { IContaRepository } from "../contracts/IContaRepository";
 import { Emprestimo } from "../entities/Emprestimo";
+import { ISolicitacaoEmprestimo, SolicitacaoEmprestimoIn, SolicitacaoEmprestimoOut } from "contracts/ISolicitacaoEmprestimo";
 
-export interface SolicitacaoEmprestimoIn {
-    contaId: string;
-    valor: number;
-}
-
-export interface SolicitacaoEmprestimoOut {
-    emprestimo: Emprestimo | Error;
-}
-
-export class SolicitacaoEmprestimoUseCase {
+export class SolicitacaoEmprestimoUseCase implements ISolicitacaoEmprestimo {
     constructor(private emprestimoRepo: IEmprestimoRepository, private contaRepo: IContaRepository) {}
 
     processa(entrada: SolicitacaoEmprestimoIn): SolicitacaoEmprestimoOut {
