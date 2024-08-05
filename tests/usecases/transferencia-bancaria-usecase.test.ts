@@ -93,6 +93,8 @@ describe('Transferencia Bancária UseCase', () => {
             destino: "999",
             valor: 100
         });
+        expect(retorno.valor).toBeInstanceOf(Error);
+        expect((retorno.valor as Error).message).toEqual("Conta de destino não encontrada");
     });
 
 });
